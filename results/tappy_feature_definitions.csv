@@ -1,0 +1,67 @@
+feature,definition,unit
+direction_ll_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_lr_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_ls_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_rl_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_rr_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_rs_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_sl_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_sr_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+direction_ss_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+flight_time_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+flight_time_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+flight_time_l_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+flight_time_l_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+flight_time_l_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+flight_time_l_median_session_median,Median across participant-month files of the within-file median,milliseconds
+flight_time_l_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+flight_time_l_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+flight_time_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+flight_time_median_session_median,Median across participant-month files of the within-file median,milliseconds
+flight_time_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+flight_time_r_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+flight_time_r_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+flight_time_r_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+flight_time_r_median_session_median,Median across participant-month files of the within-file median,milliseconds
+flight_time_r_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+flight_time_r_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+flight_time_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+hand_l_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+hand_r_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+hand_s_fraction_session_median,Median across participant-month files of the fraction of valid events in this category,dimensionless fraction
+hold_time_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+hold_time_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+hold_time_l_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+hold_time_l_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+hold_time_l_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+hold_time_l_median_session_median,Median across participant-month files of the within-file median,milliseconds
+hold_time_l_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+hold_time_l_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+hold_time_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+hold_time_median_session_median,Median across participant-month files of the within-file median,milliseconds
+hold_time_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+hold_time_r_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+hold_time_r_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+hold_time_r_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+hold_time_r_median_session_median,Median across participant-month files of the within-file median,milliseconds
+hold_time_r_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+hold_time_r_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+hold_time_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+latency_time_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+latency_time_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+latency_time_l_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+latency_time_l_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+latency_time_l_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+latency_time_l_median_session_median,Median across participant-month files of the within-file median,milliseconds
+latency_time_l_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+latency_time_l_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+latency_time_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+latency_time_median_session_median,Median across participant-month files of the within-file median,milliseconds
+latency_time_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+latency_time_r_cv_session_median,Median across participant-month files of within-file standard deviation divided by mean,dimensionless
+latency_time_r_iqr_session_median,Median across participant-month files of within-file interquartile range,milliseconds
+latency_time_r_mean_session_median,Median across participant-month files of the within-file mean,milliseconds
+latency_time_r_median_session_median,Median across participant-month files of the within-file median,milliseconds
+latency_time_r_q90_session_median,Median across participant-month files of the within-file 90th percentile,milliseconds
+latency_time_r_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
+latency_time_std_session_median,Median across participant-month files of the within-file population standard deviation,milliseconds
