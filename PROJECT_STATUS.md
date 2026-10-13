@@ -1,47 +1,47 @@
 # Project status
 
-## Scope
+## Research goal and current scope
 
-The repository contains three separate exploratory Parkinson's research classification experiments: drawing images, pen trajectories, and naturalistic Tappy Keystroke records. No verified participant crosswalk or harmonized target supports merging. No results establish diagnosis or future risk prediction.
+The long-term goal is early Parkinson's disease risk research. Current experiments are retrospective known-status classifications using drawing images, pen trajectories, and naturalistic Tappy Keystroke records. No current dataset/model establishes a pre-diagnostic outcome, prospective horizon, calibrated risk, or clinical validity. Pipelines remain independent; no verified participant crosswalk or harmonized target supports integration.
 
-## Completed work
+## Repository audit
 
-- Preserved existing drawing and pen pipelines, notebooks, outputs, and metrics.
-- Implemented Tappy event parsing, quality audits, participant-level feature aggregation, a participant holdout, model comparison, evaluation, and inference helper.
-- Recorded an optional minimum-2,000-event sensitivity experiment.
-- Added a documentation package describing the actual code and artifacts.
+- Three runnable model trainers and two shared source modules exist. The EDA notebook inventories or inspects gait, motion, drawing, pen and Tappy materials; only the three trainer-specific source subsets enter model fitting.
+- Raw local data include image/pen data, Tappy monthly records/profile archive, gait C3D/cycle/workbook data, and motion/UDysRS-UPDRS exports. Other data need schema and provenance review before use.
+- Tappy splits at participant level and fits imputation/scaling in training folds. Drawing/pen partitions are group-disjoint by filename-derived provisional IDs that require source verification.
+- Eight automated tests cover Tappy data, image vectorization, pen feature summaries and group-disjoint splits. No CI or package metadata exists. Dependencies are pinned in `requirements.txt` and verified in the current Windows/Python 3.14.6 environment.
+- Git has commit `145ceae initial models`; the worktree was clean at audit. Raw data are ignored.
 
-## Recorded findings
+See [repository audit](docs/REPOSITORY_AUDIT.md) and [dataset inventory](docs/DATASETS.md) for full findings and proposed organization.
+
+## Existing verified results
 
 | Experiment | Selected model | Held-out result |
 |---|---|---|
 | Drawing | Logistic regression, C=.01 | 48 images, 4 provisional groups; ROC-AUC .494, balanced accuracy .428; confusion `[[9,21],[8,10]]` |
 | Pen | Logistic regression, C=10 | 22 task samples, 4 provisional groups; ROC-AUC .920, balanced accuracy .929; confusion `[[8,0],[2,12]]`; only one PD group in test |
-| Tappy primary | Gradient boosting (.1 learning rate, depth 2, leaf 8, 100 trees) | 55 participants (14 controls,41 self-reported PD); ROC-AUC .423 (95% bootstrap .244-.599), AP .710 vs prevalence .745, BA .498, sensitivity .854, specificity .143; confusion `[[2,12],[6,35]]` |
-| Tappy >=2,000 events | Logistic regression, C=10 | 33 participants (8 controls,25 PD); ROC-AUC .390 (.155-.655), AP .689 vs prevalence .758, BA .425, sensitivity .600, specificity .250; confusion `[[2,6],[10,15]]` |
+| Tappy primary | Gradient boosting (.1 learning rate, depth 2, leaf 8, 100 trees) | 55 participants (14 control,41 self-reported PD); ROC-AUC .423 (95% bootstrap .244-.599), AP .710 vs prevalence .745, balanced accuracy .498, sensitivity .854, specificity .143; confusion `[[2,12],[6,35]]` |
+| Tappy >=2,000 events | Logistic regression, C=10 | 33 participants (8 control,25 PD); ROC-AUC .390 (.155-.655), AP .689 vs prevalence .758, balanced accuracy .425, sensitivity .600, specificity .250; confusion `[[2,6],[10,15]]` |
 
-The Tappy model is weak on held-out data and does not outperform the all-positive baseline on ROC-AUC, average precision, or balanced accuracy. Image and pen group tokens are provisional filename-derived identifiers; results are highly uncertain.
+The primary Tappy model is weak on held-out data and does not beat the all-positive baseline on ROC-AUC, average precision or balanced accuracy. The pen result is unstable because only one PD candidate group appears in test. Results are not directly comparable across modalities.
 
-## Limitations and remaining work
+## Changes in this audit pass
 
-- Tappy profile status is self-reported. UPDRS is unavailable/unknown for all controls and 154/162 PD profiles.
-- Tappy is uncontrolled naturalistic typing, not standardized finger tapping. Age, medication, tremor, severity, device and typing exposure can confound.
-- Small held-out cohorts; no external validation, prospective follow-up, calibrated probabilities, fairness assessment, or confounder adjustment.
-- No verified shared participants or compatible targets across sources.
-- Only `tests/test_tappy_data.py` exists (three tests); drawing and pen trainers lack unit tests.
-- `data/*` is Git-ignored. The local inventory referenced `Archived-Data.zip`, which is absent; expanded event files and profile archive exist.
-- Git has no commits and project files are untracked in this checkout.
+- Added `docs/DATASETS.md` and `docs/REPOSITORY_AUDIT.md` for source inventory, data-flow, limitations and a proposed minimal structure.
+- Updated README framing to distinguish long-term risk research from current known-status classification.
+- Corrected stale Git-state text.
+- Added `tests/test_model_features.py` for image conversion, pen geometry, group-token parsing and group-disjoint splits.
+- Left model implementations, raw datasets, split rules and canonical model/results untouched.
 
-## Reproducibility
+## Remaining work
 
-Recorded Tappy primary and sensitivity commands completed, with model bundles, metrics, candidate tables, feature definitions, test predictions, plots and reports. In this documentation pass, all three Tappy unit tests passed, `compileall` completed without errors, all three trainer `--help` commands were checked, and a saved-model smoke prediction on a synthetic all-zero 66-feature row returned class `1`. That synthetic check confirms artifact loading and code execution only; full feature extraction over all raw records was not completed during this pass. Documentation verification commands are listed below. Do not rerun against default output paths if preserving current artifacts matters; choose fresh paths.
+1. Verify image and pen group tokens against source metadata; check participant overlap across derivative copies.
+2. Consider a consistent experiment metadata and per-test-row output format without changing modality-specific protocols.
+3. Audit gait/motion schemas, labels, timing and participant links before deciding whether another pipeline is feasible.
+4. Obtain prospective, verified follow-up data and define a risk horizon before describing any model as early-risk prediction.
 
-Environment observed: Python 3.14.6, NumPy 2.5.4, pandas 3.0.6, scikit-learn 1.9.1, joblib 1.6.0, Matplotlib 3.11.2, Pillow 12.3.0. `requirements.txt` pins dependencies; broader compatibility is not verified.
+No shared model, multimodal fusion, external validation or clinical evaluation is currently supported.
 
-```powershell
-.venv\Scripts\python.exe -m unittest discover -s tests -v
-.venv\Scripts\python.exe -m compileall -q src tests
-.venv\Scripts\python.exe -m src.train_tappy_models --model-path models/verify_tappy.joblib --results-dir results/verify_tappy
-```
+## Verification and reproducibility
 
-See [README](README.md) for setup, data layout and all experiment commands.
+All eight tests pass (`python -m unittest discover -s tests -v`); `python -m compileall -q src tests` completes; all three trainer `--help` commands work. The drawing, pen and primary Tappy experiments were rerun to isolated output paths under `results/audit_repro/`, with model bundles under `models/audit_repro/`. Selected models, hyperparameters, held-out metrics and (for Tappy) bootstrap intervals exactly matched their canonical JSON summaries. The Tappy run took several minutes to parse the local event records. The optional >=2,000-event sensitivity run was not repeated in this pass.

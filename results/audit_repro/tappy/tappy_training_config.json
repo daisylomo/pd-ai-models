@@ -1,0 +1,67 @@
+{
+  "seed": 42,
+  "test_fraction": 0.25,
+  "cv": "StratifiedKFold",
+  "cv_folds": 5,
+  "selection_metric": "mean training-fold ROC-AUC",
+  "test_used_for_selection": false,
+  "minimum_events": 0,
+  "bootstrap_replicates": 2000,
+  "class_weighting": {
+    "logistic_regression": "balanced",
+    "rbf_svm": "balanced",
+    "random_forest": "balanced_subsample",
+    "gradient_boosting": "none"
+  },
+  "candidate_grids": {
+    "logistic_regression": {
+      "classifier__C": [
+        0.01,
+        0.1,
+        1.0,
+        10.0
+      ]
+    },
+    "rbf_svm": {
+      "classifier__C": [
+        0.1,
+        1.0,
+        10.0
+      ],
+      "classifier__gamma": [
+        "scale"
+      ]
+    },
+    "random_forest": {
+      "classifier__n_estimators": [
+        200
+      ],
+      "classifier__max_features": [
+        "sqrt",
+        0.5
+      ],
+      "classifier__min_samples_leaf": [
+        2,
+        5
+      ]
+    },
+    "gradient_boosting": {
+      "classifier__n_estimators": [
+        100,
+        250
+      ],
+      "classifier__learning_rate": [
+        0.03,
+        0.1
+      ],
+      "classifier__max_depth": [
+        1,
+        2
+      ],
+      "classifier__min_samples_leaf": [
+        3,
+        8
+      ]
+    }
+  }
+}

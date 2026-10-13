@@ -3,7 +3,7 @@
 ## Structure
 
 - `src/`: shared image transformer, Tappy loader, three trainers.
-- `tests/test_tappy_data.py`: three Tappy data tests.
+- `tests/test_tappy_data.py`: three Tappy data tests; `tests/test_model_features.py`: image, pen-feature, and group-split tests.
 - `data/`: local raw files, ignored by Git.
 - `models/`: serialized estimators; `results/`: metrics, tables, plots and reports.
 - `notebooks/parkinsons_eda.ipynb`: exploratory analysis; `first_experiment.ipynb`: package/environment check.

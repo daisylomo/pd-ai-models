@@ -1,0 +1,292 @@
+{
+  "study_scope": "Exploratory control-versus-known-Parkinson's pen-trajectory classification; not prospective early-risk prediction",
+  "seed": 42,
+  "label_mapping": {
+    "control": 0,
+    "parkinson": 1
+  },
+  "group_key": "class-scoped C_#### / P_#### filename convention (provisional; verify in source metadata)",
+  "target_features": [
+    "n_points",
+    "path_length",
+    "net_displacement",
+    "path_efficiency",
+    "x_range",
+    "y_range",
+    "aspect_ratio",
+    "step_mean",
+    "step_std",
+    "step_q90",
+    "step_cv",
+    "turn_abs_mean",
+    "turn_abs_std",
+    "turn_abs_q90",
+    "sharp_turn_fraction",
+    "pressure_mean",
+    "pressure_std",
+    "pressure_min",
+    "pressure_max",
+    "pressure_nonzero_fraction",
+    "grip_angle_mean",
+    "grip_angle_std",
+    "z_mean",
+    "z_std"
+  ],
+  "task_feature": "Test ID one-hot encoded; 0 static spiral, 1 dynamic spiral, 2 circular motion per readme",
+  "excluded_features": [
+    "filename",
+    "source path",
+    "group ID",
+    "raw timestamp",
+    "release name"
+  ],
+  "dataset_audit": {
+    "source_files_scanned": 80,
+    "unique_recording_contents": 40,
+    "recording_task_samples": 110,
+    "candidate_groups_by_label": {
+      "control": 15,
+      "parkinson": 10
+    },
+    "malformed_nonblank_lines": 0,
+    "missing_feature_values": 0
+  },
+  "split_summary": {
+    "train": {
+      "recording_task_samples": 66,
+      "participant_groups": 16,
+      "control_samples": 22,
+      "parkinson_samples": 44,
+      "control_groups": 9,
+      "parkinson_groups": 7
+    },
+    "validation": {
+      "recording_task_samples": 22,
+      "participant_groups": 5,
+      "control_samples": 7,
+      "parkinson_samples": 15,
+      "control_groups": 3,
+      "parkinson_groups": 2
+    },
+    "test": {
+      "recording_task_samples": 22,
+      "participant_groups": 4,
+      "control_samples": 8,
+      "parkinson_samples": 14,
+      "control_groups": 3,
+      "parkinson_groups": 1
+    }
+  },
+  "grouped_cv_folds": 3,
+  "majority_baseline_cv": {
+    "cv_train_roc_auc_mean": 0.5,
+    "cv_roc_auc_mean": 0.5,
+    "cv_roc_auc_std": 0.0,
+    "cv_roc_auc_gap": 0.0,
+    "cv_train_balanced_accuracy_mean": 0.5,
+    "cv_balanced_accuracy_mean": 0.5,
+    "validation_metrics": {
+      "n_recording_task_samples": 22,
+      "accuracy": 0.6818181818181818,
+      "balanced_accuracy": 0.5,
+      "roc_auc": 0.5,
+      "sensitivity": 1.0,
+      "specificity": 0.0,
+      "precision": 0.6818181818181818,
+      "f1": 0.8108108108108109,
+      "confusion_matrix_labels_control_parkinson": [
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          15
+        ]
+      ],
+      "classification_report": {
+        "control": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 7.0
+        },
+        "parkinson": {
+          "precision": 0.6818181818181818,
+          "recall": 1.0,
+          "f1-score": 0.8108108108108109,
+          "support": 15.0
+        },
+        "accuracy": 0.6818181818181818,
+        "macro avg": {
+          "precision": 0.3409090909090909,
+          "recall": 0.5,
+          "f1-score": 0.40540540540540543,
+          "support": 22.0
+        },
+        "weighted avg": {
+          "precision": 0.4648760330578512,
+          "recall": 0.6818181818181818,
+          "f1-score": 0.5528255528255529,
+          "support": 22.0
+        }
+      }
+    }
+  },
+  "majority_baseline_test_metrics": {
+    "n_recording_task_samples": 22,
+    "accuracy": 0.6363636363636364,
+    "balanced_accuracy": 0.5,
+    "roc_auc": 0.5,
+    "sensitivity": 1.0,
+    "specificity": 0.0,
+    "precision": 0.6363636363636364,
+    "f1": 0.7777777777777778,
+    "confusion_matrix_labels_control_parkinson": [
+      [
+        0,
+        8
+      ],
+      [
+        0,
+        14
+      ]
+    ],
+    "classification_report": {
+      "control": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 8.0
+      },
+      "parkinson": {
+        "precision": 0.6363636363636364,
+        "recall": 1.0,
+        "f1-score": 0.7777777777777778,
+        "support": 14.0
+      },
+      "accuracy": 0.6363636363636364,
+      "macro avg": {
+        "precision": 0.3181818181818182,
+        "recall": 0.5,
+        "f1-score": 0.3888888888888889,
+        "support": 22.0
+      },
+      "weighted avg": {
+        "precision": 0.4049586776859504,
+        "recall": 0.6363636363636364,
+        "f1-score": 0.494949494949495,
+        "support": 22.0
+      }
+    }
+  },
+  "candidate_results": [
+    {
+      "model": "logistic_regression",
+      "cv_train_roc_auc_mean": 0.9954467706622879,
+      "cv_roc_auc_mean": 0.8236986461251167,
+      "cv_roc_auc_std": 0.034768397256692236,
+      "cv_roc_auc_gap": 0.17174812453717125,
+      "cv_train_balanced_accuracy_mean": 0.9771245742869304,
+      "cv_balanced_accuracy_mean": 0.8005835667600373,
+      "validation_roc_auc": 1.0,
+      "validation_balanced_accuracy": 1.0,
+      "validation_sensitivity": 1.0,
+      "validation_specificity": 1.0,
+      "validation_precision": 1.0,
+      "validation_f1": 1.0,
+      "validation_false_positives": 0,
+      "validation_false_negatives": 0,
+      "validation_confusion_matrix": "[[7, 0], [0, 15]]",
+      "best_params": "{\"classifier__C\": 10.0}"
+    },
+    {
+      "model": "rbf_svm",
+      "cv_train_roc_auc_mean": 1.0,
+      "cv_roc_auc_mean": 0.7469421101774044,
+      "cv_roc_auc_std": 0.15069099843914485,
+      "cv_roc_auc_gap": 0.2530578898225956,
+      "cv_train_balanced_accuracy_mean": 0.9828717007237122,
+      "cv_balanced_accuracy_mean": 0.7047152194211016,
+      "validation_roc_auc": 1.0,
+      "validation_balanced_accuracy": 0.9285714285714286,
+      "validation_sensitivity": 1.0,
+      "validation_specificity": 0.8571428571428571,
+      "validation_precision": 0.9375,
+      "validation_f1": 0.967741935483871,
+      "validation_false_positives": 1,
+      "validation_false_negatives": 0,
+      "validation_confusion_matrix": "[[6, 1], [0, 15]]",
+      "best_params": "{\"classifier__C\": 10.0, \"classifier__gamma\": \"scale\"}"
+    },
+    {
+      "model": "random_forest",
+      "cv_train_roc_auc_mean": 1.0,
+      "cv_roc_auc_mean": 0.7959967320261438,
+      "cv_roc_auc_std": 0.06592757186926519,
+      "cv_roc_auc_gap": 0.20400326797385615,
+      "cv_train_balanced_accuracy_mean": 0.9947916666666666,
+      "cv_balanced_accuracy_mean": 0.7252684407096172,
+      "validation_roc_auc": 1.0,
+      "validation_balanced_accuracy": 0.8571428571428572,
+      "validation_sensitivity": 1.0,
+      "validation_specificity": 0.7142857142857143,
+      "validation_precision": 0.8823529411764706,
+      "validation_f1": 0.9375,
+      "validation_false_positives": 2,
+      "validation_false_negatives": 0,
+      "validation_confusion_matrix": "[[5, 2], [0, 15]]",
+      "best_params": "{\"classifier__max_features\": 0.75, \"classifier__min_samples_leaf\": 4}"
+    }
+  ],
+  "selected_model": "logistic_regression",
+  "test_metrics": {
+    "n_recording_task_samples": 22,
+    "accuracy": 0.9090909090909091,
+    "balanced_accuracy": 0.9285714285714286,
+    "roc_auc": 0.9196428571428571,
+    "sensitivity": 0.8571428571428571,
+    "specificity": 1.0,
+    "precision": 1.0,
+    "f1": 0.9230769230769231,
+    "confusion_matrix_labels_control_parkinson": [
+      [
+        8,
+        0
+      ],
+      [
+        2,
+        12
+      ]
+    ],
+    "classification_report": {
+      "control": {
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1-score": 0.8888888888888888,
+        "support": 8.0
+      },
+      "parkinson": {
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "f1-score": 0.9230769230769231,
+        "support": 14.0
+      },
+      "accuracy": 0.9090909090909091,
+      "macro avg": {
+        "precision": 0.9,
+        "recall": 0.9285714285714286,
+        "f1-score": 0.905982905982906,
+        "support": 22.0
+      },
+      "weighted avg": {
+        "precision": 0.9272727272727272,
+        "recall": 0.9090909090909091,
+        "f1-score": 0.9106449106449106,
+        "support": 22.0
+      }
+    }
+  },
+  "model_selection": "validation ROC-AUC, with validation balanced accuracy as a tie-breaker; test metrics are not used to select the model",
+  "motion_fusion": "not performed: this pen-trajectory cohort has no verified participant mapping to the image, C3D, or UPDRS cohorts"
+}
