@@ -1,0 +1,307 @@
+{
+  "study_scope": "Retrospective classification of known PD versus control status from smartphone touchscreen typing; not prospective risk prediction",
+  "dataset_audit": {
+    "dataset": "i-PROGNOSIS touchscreen typing development dataset",
+    "label_source": "Group column in Demographics_Clinical_Characteristics.csv; Control=0, PD=1",
+    "participant_id_source": "S## folder and S##_TEX## filename linked to Subject ID column",
+    "event_schema": [
+      "Press",
+      "press timestamp milliseconds",
+      "Release timestamp milliseconds",
+      "normalized pressure 0-1"
+    ],
+    "timestamp_unit": "milliseconds, as documented in local ReadMe.txt",
+    "pressure_summary_policy": "Only observed values in documented [0,1] range enter pressure features; all values are retained in audit counts, no clipping",
+    "aggregation": "median of excerpt-level feature summaries per participant; event and excerpt counts are audit-only",
+    "participants": 33,
+    "participants_by_label": {
+      "control": 15,
+      "pd": 18
+    },
+    "excerpt_files": 338,
+    "excerpt_files_by_participant_min": 5,
+    "excerpt_files_by_participant_max": 11,
+    "audit_totals": {
+      "nonblank_lines": 26343,
+      "valid_events": 26343,
+      "malformed_lines": 0,
+      "invalid_events": 0,
+      "out_of_range_pressure_events": 7,
+      "timestamp_order_reversals": 1,
+      "negative_interkey_gaps_excluded": 1
+    },
+    "malformed_files": [],
+    "empty_files": [],
+    "licence": "Creative Commons Attribution 4.0 International, documented in local ReadMe.txt",
+    "required_citation": "Iakovakis et al. (2018), Scientific Reports 8, 7663, doi:10.1038/s41598-018-25999-0",
+    "source_readme_notes": "ReadMe reports 10 participants did not complete the shared initial 200-character excerpt; excerpt text/key content is not included, so completeness cannot be independently verified from event files alone."
+  },
+  "seed": 42,
+  "split": {
+    "train_participant_ids": [
+      "01",
+      "02",
+      "04",
+      "07",
+      "09",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "23",
+      "24",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "32",
+      "33"
+    ],
+    "test_participant_ids": [
+      "03",
+      "05",
+      "06",
+      "08",
+      "22",
+      "25",
+      "31"
+    ],
+    "cv_folds": [
+      {
+        "fold": 1,
+        "train_participant_ids": [
+          "01",
+          "02",
+          "04",
+          "07",
+          "10",
+          "11",
+          "12",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "23",
+          "24",
+          "26",
+          "27",
+          "29",
+          "30"
+        ],
+        "validation_participant_ids": [
+          "09",
+          "13",
+          "14",
+          "28",
+          "32",
+          "33"
+        ]
+      },
+      {
+        "fold": 2,
+        "train_participant_ids": [
+          "01",
+          "02",
+          "07",
+          "09",
+          "11",
+          "13",
+          "14",
+          "15",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "23",
+          "24",
+          "27",
+          "28",
+          "29",
+          "30",
+          "32",
+          "33"
+        ],
+        "validation_participant_ids": [
+          "04",
+          "10",
+          "12",
+          "16",
+          "26"
+        ]
+      },
+      {
+        "fold": 3,
+        "train_participant_ids": [
+          "01",
+          "02",
+          "04",
+          "09",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "16",
+          "17",
+          "18",
+          "19",
+          "21",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "32",
+          "33"
+        ],
+        "validation_participant_ids": [
+          "07",
+          "15",
+          "20",
+          "23",
+          "24"
+        ]
+      },
+      {
+        "fold": 4,
+        "train_participant_ids": [
+          "01",
+          "02",
+          "04",
+          "07",
+          "09",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "19",
+          "20",
+          "23",
+          "24",
+          "26",
+          "27",
+          "28",
+          "32",
+          "33"
+        ],
+        "validation_participant_ids": [
+          "17",
+          "18",
+          "21",
+          "29",
+          "30"
+        ]
+      },
+      {
+        "fold": 5,
+        "train_participant_ids": [
+          "04",
+          "07",
+          "09",
+          "10",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "20",
+          "21",
+          "23",
+          "24",
+          "26",
+          "28",
+          "29",
+          "30",
+          "32",
+          "33"
+        ],
+        "validation_participant_ids": [
+          "01",
+          "02",
+          "11",
+          "19",
+          "27"
+        ]
+      }
+    ],
+    "participant_overlap": 0
+  },
+  "cross_validation_best_roc_auc_by_model": {
+    "logistic_regression": 0.6888888888888889,
+    "random_forest": 0.7333333333333334
+  },
+  "selected_model": "random_forest",
+  "selected_hyperparameters": {
+    "classifier__max_features": "sqrt",
+    "classifier__min_samples_leaf": 2
+  },
+  "test_metrics": {
+    "n_participants": 7,
+    "class_support": {
+      "control": 3,
+      "pd": 4
+    },
+    "accuracy": 0.8571428571428571,
+    "balanced_accuracy": 0.875,
+    "precision_pd": 1.0,
+    "recall_pd": 0.75,
+    "f1_pd": 0.8571428571428571,
+    "roc_auc": 1.0,
+    "confusion_matrix_labels_control_pd": [
+      [
+        3,
+        0
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "classification_report": {
+      "control": {
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1-score": 0.8571428571428571,
+        "support": 3.0
+      },
+      "pd": {
+        "precision": 1.0,
+        "recall": 0.75,
+        "f1-score": 0.8571428571428571,
+        "support": 4.0
+      },
+      "accuracy": 0.8571428571428571,
+      "macro avg": {
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1-score": 0.8571428571428571,
+        "support": 7.0
+      },
+      "weighted avg": {
+        "precision": 0.8928571428571429,
+        "recall": 0.8571428571428571,
+        "f1-score": 0.8571428571428571,
+        "support": 7.0
+      }
+    }
+  },
+  "interpretation": "Small single-study cohort; held-out metrics are unstable and do not establish external validity, clinical readiness, or prospective risk prediction."
+}

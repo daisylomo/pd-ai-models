@@ -1,41 +1,55 @@
-# Experiments and recorded results
+# Active experiment results
 
-Values below come from existing metrics JSON and reports. They are not freshly estimated in this document pass. Units and source populations differ, so this is not a cross-modal leaderboard.
+All runs are retrospective classification of existing labels. No experiment predicts future diagnosis or establishes clinical validity. Local datasets, labels and populations are not harmonized; results are not a cross-modality leaderboard.
 
-## Cohorts
+## Drawing comparison
 
-| Source | Local subset | Target/unit | Caveat |
-|---|---|---|---|
-| Drawings | 204 unique images, 28 candidate groups | Healthy vs Parkinson's; image | `V##` group token provisional; four test groups |
-| Pen traces | 40 unique recordings, 110 task samples, 25 candidate groups | Control vs Parkinson's; task sample | Folder labels and filename-derived groups; test includes one PD group |
-| Tappy | 217 profiled participants, 558 files, 8,835,813 valid matched events | Control vs self-reported PD; participant | Naturalistic typing, not standardized tapping; UPDRS mostly unavailable |
+The preserved pixel baseline was rerun to `results/finalization_baseline/drawing/` and matched the canonical root metrics. It selects logistic regression on a separate grouped validation partition, then evaluates one 48-image test set. Its candidate groups are filename-derived and unverified.
 
-No shared participant crosswalk, equivalent diagnostic criteria, or equivalent distributions have been established.
+The controlled comparison uses seed 42, the same candidate-group train/validation/test assignments for every representation/task, and three-fold `StratifiedGroupKFold` on train+validation groups. Candidate choice uses CV ROC-AUC, with balanced accuracy as tie-breaker. No test score is used to choose a model or representation. Because multiple feature/model candidates are compared on these same CV folds, the winning CV mean is selection-optimistic. The grouped test has four candidate groups total (one healthy, three Parkinson's). Since identity is unverified, this is not confirmed unseen-participant evaluation.
 
-## Results
+An earlier broader draft search was stopped for runtime before completing or producing result metrics. The bounded search documented below completed; no results from the stopped run are reported.
 
-| Run | Selected/CV | Held-out result |
-|---|---|---|
-| Drawing | Logistic regression C=.01; grouped CV ROC-AUC .671 (SD .022), validation ROC .718 | 48 images/four candidate groups; ROC .494, BA .428, accuracy .396, sensitivity .556, specificity .300; confusion `[[9,21],[8,10]]`. Majority ROC/BA=.5. |
-| Pen | Logistic regression C=10; grouped CV ROC .824, validation ROC 1.000 | 22 task samples/four candidate groups; ROC .920, BA .929; confusion `[[8,0],[2,12]]`. Only one PD group in test. |
-| Tappy primary | Gradient boosting: learning rate .1, depth 2, leaf 8, 100 estimators; train-fold ROC 1.000, validation .540 (SD .095), AP .778, BA .463 | 55 participants (14 control,41 PD); ROC .423 (95% bootstrap .244-.599), AP .710 vs prevalence .745, accuracy .673, BA .498, sensitivity .854, specificity .143, precision .745, F1 .796; confusion `[[2,12],[6,35]]`. |
-| Tappy >=2,000 events | Logistic regression C=10; train-fold ROC .976, validation .498 (SD .077), AP .783, BA .481 | 33 participants (8 control,25 PD); ROC .390 (95% bootstrap .155-.655), AP .689 vs prevalence .758, accuracy .515, BA .425, sensitivity .600, specificity .250, precision .714, F1 .652; confusion `[[2,6],[10,15]]`. |
+| Evaluation | Representation | Best CV model | CV ROC-AUC, mean ± SD | CV balanced accuracy | Test ROC-AUC | Test balanced accuracy | Test support (healthy, PD) |
+|---|---|---|---:|---:|---:|---:|---:|
+| Original combined baseline | 32×32 grayscale pixels | Logistic regression (validation-selected) | 0.671 ± 0.022 | 0.625 | 0.494 | 0.428 | 30, 18 |
+| Spiral | 32×32 grayscale pixels | RBF SVM | 0.788 ± 0.088 | 0.650 | — | — | — |
+| Spiral | Aspect-preserving 64×64 pixels | RBF SVM | 0.749 ± 0.119 | 0.644 | — | — | — |
+| Spiral | Hand-crafted image descriptors | RBF SVM | 0.876 ± 0.076 | 0.753 | **0.733** | 0.644 | 15, 9 |
+| Spiral | Combined pixels + descriptors | Logistic regression | 0.767 ± 0.043 | 0.692 | — | — | — |
+| Wave | 32×32 grayscale pixels | Logistic regression | 0.711 ± 0.087 | 0.644 | — | — | — |
+| Wave | Aspect-preserving 64×64 pixels | Logistic regression | 0.616 ± 0.151 | 0.547 | — | — | — |
+| Wave | Hand-crafted image descriptors | Random forest | 0.716 ± 0.071 | 0.689 | **0.444** | 0.422 | 15, 9 |
+| Wave | Combined pixels + descriptors | Logistic regression | 0.660 ± 0.171 | 0.608 | — | — | — |
+| Combined tasks | 32×32 grayscale pixels | Logistic regression | 0.688 ± 0.077 | 0.654 | — | — | — |
+| Combined tasks | Aspect-preserving 64×64 pixels | Logistic regression | 0.658 ± 0.102 | 0.624 | — | — | — |
+| Combined tasks | Hand-crafted image descriptors | RBF SVM | 0.750 ± 0.063 | 0.681 | **0.554** | 0.467 | 30, 18 |
+| Combined tasks | Combined pixels + descriptors | Logistic regression | 0.679 ± 0.094 | 0.654 | — | — | — |
 
-Tappy's majority baseline predicts every test participant positive. In the primary set its accuracy is .745, balanced accuracy and ROC-AUC .5, average precision .745 and specificity zero. The selected model has near-chance BA, ROC below .5 and AP below baseline. The train/validation gap indicates overfit. The sensitivity run changes cohort composition and is not a correction for confounding.
+Only the CV-selected candidate for each task was evaluated on the final comparison test set; dashes mean no separate test metric was generated. On this split the combined handcrafted result is numerically higher than the preserved baseline on ROC-AUC (.554 vs .494) and balanced accuracy (.467 vs .428), but balanced accuracy remains below .5 and the test contains only four unverified groups. This is not reliable evidence of improvement. Spiral is higher on this small split; wave is below chance ROC-AUC. Candidate-specific metrics, all CV scores, split assignments and test predictions are in `results/drawing_representation_comparison/`.
 
-## Candidate models and search settings
+## Virtual touchscreen typing
 
-Across all trainers, logistic regression learns a regularized linear boundary, RBF SVM a curved similarity-based boundary, and random forest an average of decision trees. Tappy additionally uses gradient boosting, which adds shallow trees sequentially. Tappy grids: logistic `C=[.01,.1,1,10]`; RBF SVM `C=[.1,1,10]`, `gamma='scale'`; random forest 200 trees, `max_features=['sqrt',.5]`, `min_samples_leaf=[2,5]`; gradient boosting `n_estimators=[100,250]`, `learning_rate=[.03,.1]`, `max_depth=[1,2]`, `min_samples_leaf=[3,8]`. Logistic/SVM use balanced class weights; forest uses `balanced_subsample`; boosting is unweighted. Tappy selects by training-fold mean ROC-AUC.
+The i-PROGNOSIS pipeline uses one participant-level row after excerpt aggregation. Seed 42 gives 26 training and seven held-out participants; grouped five-fold CV operates only on training participants. Logistic regression and random forest are selected by grouped-CV ROC-AUC. The model is random forest with `max_features=sqrt`, `min_samples_leaf=2`.
 
-Drawing uses logistic `C=[.01,.1,1,10]`, RBF SVM `C=[.1,1,10]` and `gamma='scale'`, and a 300-tree balanced-subsample forest with `max_features=['sqrt',.25]`, leaf sizes `[2,4]`. Pen uses the same logistic/SVM grids and a 300-tree balanced-subsample forest with `max_features=['sqrt',.75]`, leaf sizes `[2,4]`. These trainers select using their grouped validation ROC-AUC, with balanced accuracy as configured in their selection rules. All use fixed random seeds in the recorded runs.
+| Measure | Verified value |
+|---|---:|
+| Cohort | 33 participants: 15 controls, 18 PD |
+| Excerpts | 338 |
+| Best grouped-CV ROC-AUC | Logistic regression 0.689; random forest 0.733 |
+| Test support | 3 controls, 4 PD (7 participants total) |
+| Accuracy | 0.857 |
+| Balanced accuracy | 0.875 |
+| PD precision / recall / F1 | 1.000 / 0.750 / 0.857 |
+| ROC-AUC | 1.000 |
+| Confusion matrix (true rows; control, PD columns) | `[[3, 0], [1, 3]]` |
 
-## Limits
+The held-out result is reproduced but very unstable at seven participants. It does not establish external validation, prospective prediction, clinical readiness or robust generalization. The source cohort is single-study and potential confounders remain.
 
-Tappy labels are self-reported; age, medication, tremor, severity, device, typing habits and exposure may confound. Bootstrap intervals cover resampling of the test participants at fixed class counts, not selection or external uncertainty. Small held-out groups make image/pen results especially unstable. No external validation, prospective outcomes, calibrated probabilities, confounder adjustment, or clinical assessment is available. Do not make diagnostic, clinical sensitivity, or cross-dataset generalization claims.
+## Reproducibility and artifact paths
 
-## Artifact paths
+- Drawing pixel baseline: `models/finalization_baseline/drawing_image_model.joblib`; `results/finalization_baseline/drawing/drawing_training_metrics.json` and `drawing_candidate_results.csv`.
+- Drawing comparison: selected per-task bundles under `models/drawing_representation_comparison/`; metrics, CV comparison, fold/split assignments, test predictions and report under `results/drawing_representation_comparison/`.
+- Typing rerun: `models/finalization_baseline/typing_iprognosis_model.joblib`; participant features, excerpt audit, split assignments, grouped-CV table, test predictions, config, metrics and report under `results/finalization_baseline/typing/`.
 
-- Drawing: `models/drawing_image_model.joblib`, `results/drawing_training_metrics.json`, `results/drawing_candidate_results.csv`.
-- Pen: `models/handwriting_trajectory_model.joblib`, `results/handwriting_training_metrics.json`, `results/handwriting_candidate_results.csv`.
-- Tappy primary: model `models/tappy_keystroke_model.joblib`, artifacts `results/tappy_*`.
-- Tappy sensitivity: model `models/tappy_keystroke_min2000_model.joblib`, artifacts in `results/tappy_min_events_2000/`.
+Seeds and participant/candidate-group split identities are recorded in the JSON/CSV outputs. The typing features and participant IDs are local derived data and should not be redistributed casually. Existing pre-finalization result and model files were preserved.

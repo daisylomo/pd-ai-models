@@ -1,33 +1,19 @@
-# ML workflow
+# Active machine-learning workflow
 
-## Load and clean
+## Spiral and wave drawings
 
-**Drawings:** `build_manifest()` finds labeled image paths, SHA-256 hashes and removes exact duplicate contents. Labels follow folders; `V##` filenames provide provisional groups.
+`src.train_drawing_models` builds a labeled image manifest, checks duplicate hashes, derives class-scoped `V##` candidate groups and retains the original 32×32 pixel baseline. It partitions groups into train/validation/test and selects among logistic regression, RBF SVM and random forest using grouped CV plus validation. The preserved baseline test remains 48 images from four candidate groups.
 
-**Pen traces:** `build_dataset()` scans two local `hw_dataset` trees, parses point rows, hashes duplicate recordings, uses folder labels and derives candidate groups from filenames. Recorded audit: 80 files, 40 unique recordings, 110 task samples, 25 provisional groups.
+`src.train_drawing_comparisons` compares that pixel representation with aspect-preserving 64×64 grayscale, image-derived foreground/shape/radial/orientation descriptors, and a combined descriptor. It evaluates spiral, wave and combined-task subsets on the same outer candidate-group assignments. CV ROC-AUC chooses model/representation with balanced accuracy as tie-breaker; test is used only after selection. Fixed per-image transforms are cached, while `StandardScaler` is learned inside each CV fit. Since `V##` identity and cross-task mapping are not source-verified, all findings remain candidate-group exploratory results.
 
-**Tappy:** `load_profiles()` reads the user ZIP; `build_participant_dataset()` processes 622 event files. It audits profile matching, UserKey conflicts, duplicates, timing validity, dates, timestamps and event order. Recorded exclusions include 63 unmatched files/301,987 rows, 72 mismatched-key rows, 178,394 duplicate rows and 592 invalid timing rows. Invalid date/time and order are reported without dropping otherwise valid timing. Negative hold/latency are excluded; negative flight is retained.
+## Virtual touchscreen typing
 
-## Features and unit of analysis
+`src.iprognosis_data` parses the documented `Press,<ms>,Release <ms>,<pressure>` event lines; joins S## folders and S##_TEX## names to the clinical CSV `Subject ID`; maps `Control=0` and `PD=1`; audits malformed records, reversed timestamps and pressure values outside the documented range; and extracts excerpt timing, pause and pressure summaries. Excerpt features are median-aggregated to a single participant row. Event and excerpt counts are audit-only.
 
-Tappy target: `0=control`, `1=self-reported Parkinson's`. One row is one participant. Each month and each hold/latency/flight measure gets mean, population standard deviation, median, q90, IQR and coefficient of variation. Timing summaries are also made for L/R current-key events. L/R/space (`S`) and all nine direction codes become fractions. Monthly values are median-aggregated per participant, so each month has equal weight. Timings use milliseconds; fractions and CV are dimensionless. IDs, target, timestamps, profile covariates, event count and session count are not predictors.
+`src.train_typing_models` uses a fixed-seed stratified participant holdout (26 train, 7 test) and five-fold grouped CV on the training participants. Logistic regression and random forest are selected by CV ROC-AUC. Imputation, missingness indicators and logistic-regression scaling are inside sklearn pipelines, so fold-validation and test rows do not fit preprocessing. The held-out set is too small for stable estimates.
 
-Drawing inputs are 32x32 normalized grayscale values. Pen features summarize path geometry, step lengths, turns, pressure, grip angle, z and task ID. Exact feature code is in `src/train_handwriting_models.py`.
+## Outputs and interpretation
 
-## Split and preprocessing
+Drawing comparison artifacts include CV candidate scores, fold/split assignments, selected test predictions, metrics JSON, report and serialized pipelines. Typing outputs include participant and excerpt audit tables, split/CV assignments, test predictions, model config, metrics, report and pipeline. Use a new output directory for each run; never overwrite the preserved baseline artifacts when conducting another comparison.
 
-Tappy seed 42 creates stratified 75/25 participant split: 162 train (41 control,121 PD), 55 test (14,41); five-fold stratified CV uses training only. At least 2,000 events yields 131 participants, split 98/33. No participant crosses partitions.
-
-Drawing partitions contain 114/42/48 images and 19/5/4 candidate groups; grouped 3-fold CV uses training data. Pen partitions contain 66/22/22 task samples and 16/5/4 candidate groups, with grouped 3-fold CV. Its group IDs are not validated participant identities.
-
-Tappy's sklearn `Pipeline` fits median imputation with missingness indicators and (for linear/SVM candidates) standard scaling inside each training fold. This prevents validation data from determining medians or scale. Trees omit scaling. Drawing and pen similarly place feature processing in sklearn pipeline/column-transformer workflows. See source for each fit/refit boundary.
-
-## Models and selection
-
-Tappy compares class-weighted logistic regression, RBF SVM and random forest with unweighted gradient boosting, plus a prior-only baseline. Search grids are saved in JSON configuration. Mean training-fold ROC-AUC chooses the candidate; balanced accuracy and average precision are also reported. Test data are evaluated only after selection. Drawing and pen compare logistic regression, RBF SVM and random forest; their metrics record separate validation selection.
-
-## Evaluation and outputs
-
-ROC-AUC describes ranking across thresholds; average precision summarizes precision/recall and should be compared to positive prevalence. Accuracy may hide class imbalance. Balanced accuracy averages sensitivity and specificity. A confusion matrix gives counts (true labels by rows). Tappy records 2,000 stratified participant bootstrap percentile intervals; these do not include model-selection or external-cohort uncertainty. Scores are not calibrated probabilities.
-
-Tappy writes a joblib model bundle, config and metrics JSON, candidate and feature-definition CSVs, test-prediction CSV, ROC/PR and confusion/CV plots, and Markdown report. `predict_participant_features()` loads the bundle, orders required features, and returns class plus ranking score. Raw event conversion is a separate call to `build_unlabeled_participant_features()`.
+Both tasks classify existing group status. Neither evaluates future disease conversion, clinical screening, or prospective risk. There is no external validation, and no cross-modal fusion is justified.

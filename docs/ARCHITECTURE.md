@@ -1,37 +1,26 @@
-# Architecture and data flow
+# Active pipeline architecture
 
-Each dataset has a separate pipeline. Images become grayscale pixel vectors, pen traces become task-level features, and Tappy event logs become monthly summaries then one participant row. Each trainer owns splitting, model selection, evaluation and artifact writing.
+The repository contains independent drawing and virtual-touchscreen-typing experiments. No shared participant crosswalk or harmonized feature space supports fusion.
 
 ```mermaid
 flowchart TD
   subgraph Drawing
-    DI[Raw labeled images] --> DM[Manifest, hash dedupe, provisional groups]
-    DM --> DV[Grouped train / validation / test]
-    DV --> DX[32 by 32 grayscale vectors]
-    DX --> DCV[Grouped CV and validation selection]
-    DCV --> DT[Held-out image test]
+    A[Labeled spiral/wave PNGs] --> B[Hash manifest and provisional class-scoped V groups]
+    B --> C[Fixed grouped train/validation/test assignments]
+    C --> D[Grouped CV over pixels, descriptors, combined representation]
+    D --> E[CV-selected pipeline and reserved candidate-group test]
   end
-  subgraph Pen
-    PI[Raw trace files] --> PH[Parse and deduplicate]
-    PH --> PF[Task trajectory features]
-    PF --> PS[Provisional group splits]
-    PS --> PCV[Grouped CV and validation selection]
-    PCV --> PT[Held-out task test]
+  subgraph Typing
+    F[Excerpt event files] --> H[Validate schema and extract excerpt features]
+    G[Clinical CSV Subject ID and Group] --> H
+    H --> I[Median aggregate excerpts to one row per participant]
+    I --> J[Participant holdout and grouped CV on training only]
+    J --> K[Selected pipeline and seven-person held-out test]
   end
-  subgraph Tappy
-    TE[Monthly event files] --> TV[Validate, match, audit]
-    TP[User profiles] --> TV
-    TV --> TM[Monthly timing, hand, direction summaries]
-    TM --> TA[Median aggregation per participant]
-    TA --> TS[Stratified participant holdout]
-    TS --> TCV[Train-only CV and pipeline selection]
-    TCV --> TT[Held-out test and bootstrap]
-    TA --> INF[Saved pipeline input]
-    INF --> PRED[Class and ranking score]
-  end
-  DT --> ART[Models, metrics, tables and plots]
-  PT --> ART
-  TT --> ART
+  E --> O[Per-experiment models, metrics, assignments, predictions, reports]
+  K --> O
 ```
 
-For Tappy, monthly records are aggregated before the participant split. Imputation and scaling are inside sklearn pipelines and learned within training folds. Drawing and pen groups are filename-derived provisional tokens; source-level identity verification is still needed. The saved estimators are independent: no shared feature space or verified cross-dataset participant key exists for fusion.
+Drawing image transforms are deterministic and independent per image; scaling and estimators are inside sklearn cross-validation pipelines. `V##` tokens are unverified candidate groups, so even group-disjoint evaluation does not prove participant independence. The typing loader links event folders and excerpt names to the clinical `Subject ID`; excerpts are aggregated before participant-level splitting. Typing imputation, missingness indicators and scaling are fitted inside each training fold.
+
+The legacy handwriting and Tappy source trainers were removed from active source. Their existing model/result artifacts and local raw datasets are retained unchanged as historical material.

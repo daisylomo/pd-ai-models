@@ -1,67 +1,26 @@
-# Repository audit and proposed structure
+# Repository consolidation audit
 
-## Current repository state
+## Active code
 
-The current checkout has one commit (`145ceae initial models`) and a clean Git worktree. Raw data are ignored by `.gitignore`; source, documentation, experiment JSON/CSV/PNG outputs, and four joblib model bundles are tracked. The tracked artifacts support result inspection, but binaries from joblib should only be loaded when trusted. The status text that previously claimed there were no commits and all files were untracked is stale.
+- Drawing: `src/image_features.py`, `src/drawing_features.py`, `src/train_drawing_models.py`, and `src/train_drawing_comparisons.py`.
+- Typing: `src/iprognosis_data.py` and `src/train_typing_models.py`.
+- Tests: focused parsing/linkage/feature/split/metric tests under `tests/`.
+- Documentation: dataset inventory, drawing identity audit, experiments, architecture, workflow, this audit, and learning guide.
 
-There are three runnable trainers: `src/train_drawing_models.py`, `src/train_handwriting_models.py`, and `src/train_tappy_models.py`. Dataset loading and feature code live in `src/tappy_data.py` and `src/image_features.py`; pen and image loading/features are currently in their respective trainer modules. Before this audit pass, automated tests covered only Tappy data. This pass adds synthetic image, pen-feature, and group-split tests; the suite now has eight tests. Both notebooks are exploratory/support notebooks; the EDA covers inventory, handwriting sensor streams, drawing images, gait/body-motion exports and prior model results. No notebook is imported by training scripts. `first_experiment.ipynb` is a small environment check.
+The repository also contains exploratory notebooks, historical saved models/results, and local datasets. These do not enter the active training paths unless explicitly invoked. Out-of-scope Tappy and pen-trajectory trainer source was removed after checking imports; existing historical model/result artifacts and raw data were left in place.
 
-## Data flow and experiment integrity
+## Evaluation findings
 
-- Drawing: labeled folder paths -> hash deduplication -> provisional class-scoped filename groups -> grouped train/validation/test and grouped CV -> grayscale pixels -> three classifiers -> validation selection -> refit on train plus validation -> held-out image metrics.
-- Pen: two `hw_dataset` trees -> parse and hash deduplication -> task features -> provisional filename groups -> grouped partitions/CV -> three classifiers -> validation selection -> train+validation refit -> held-out task-sample metrics.
-- Tappy: profile ZIP plus expanded monthly event logs -> matching/validation/audit -> timing and category summaries per month -> equal-month median per participant -> stratified participant holdout -> train-only five-fold CV and pipeline selection -> one held-out participant evaluation, baseline and bootstrap interval -> model and reports.
+The drawing baseline correctly uses pipeline preprocessing and group-disjoint candidate partitions, but filename-derived `V##` identities are unverified. Its four-group test composition (one healthy and three Parkinson's groups) makes results unstable, and does not establish unseen-person performance. The original `training`/`testing` folders themselves share candidate tokens.
 
-Tappy's participant split and in-fold preprocessing avoid the main repeated-measurement and preprocessing leakage paths. Drawing/pen use group-disjoint partitions, but the group mapping is not source-verified. Tappy CV performance is also used to select among several model families/settings, so those CV estimates are selection-optimistic; the held-out score remains the relevant final estimate but is imprecise. The pen test result uses only one PD candidate group. No cross-dataset performance comparison uses matched splits, and the scores should not be compared as if they were one benchmark.
+The comparison experiment uses deterministic per-image representations with fold-local scaling and model fitting. A shared fixed candidate-group partition allows representation comparisons on matching groups, but the groups are not known participants. The reserved test set is never used for selection. Its metrics must remain exploratory.
 
-## Code quality and reproducibility findings
+The typing loader aggregates to participants before partitioning and joins labels through clinical subject IDs. Grouped training CV keeps the seven held-out participants unseen and fits imputation/scaling within folds. The test has only seven participants, so even the reproduced high ROC-AUC is imprecise.
 
-- All three module `--help` commands import successfully; the eight-test suite passes and `compileall` completes.
-- Hashing and metric calculation patterns are duplicated in drawing and pen. Their data schemas, group split logic and metric key formats differ. Extracting a general framework now would risk hiding important dataset distinctions; reuse only a small helper after tests demonstrate identical semantics.
-- Experiment settings are constants and CLI arguments, not separate config files. There is no package metadata (`pyproject.toml`), CI setup, or environment lock beyond the pinned `requirements.txt`. The lock includes notebook dependencies and is validated only in the observed Windows/Python 3.14.6 environment.
-- Tappy outputs are relatively complete; image and pen outputs are less uniform (no equivalent per-sample test prediction CSV or plots). This is a useful consistency improvement, but should be added as a small reporting layer without changing model selection.
-- The EDA notebook repeats some inventory/hash logic, as expected for exploration. Keep it unless repeated calculations become a source of conflicting results.
-- There is no data augmentation implementation. No augmentation should be added without a modality-specific research rationale and train-only fit boundary.
+## Reproducibility
 
-## Proposed target structure
+Seed 42 is recorded, as are partition/fold assignments, candidate CV tables, selected configurations and test predictions. Raw data are excluded from Git by `.gitignore`. The existing pinned `requirements.txt` is retained; no dependency was added for drawing features.
 
-Keep the existing source paths and CLI entry points to protect working commands. Add organization only where it improves traceability:
+## Remaining limits
 
-```text
-.
-├── configs/                         # optional versioned experiment settings, if extracted
-├── data/                            # local raw datasets; ignored by Git
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── CODEBASE_WALKTHROUGH.md
-│   ├── DATASETS.md
-│   ├── EXPERIMENTS.md
-│   ├── LEARNING_GUIDE.md
-│   ├── ML_WORKFLOW.md
-│   └── REPOSITORY_AUDIT.md
-├── models/                          # fitted artifacts
-├── notebooks/                       # exploratory analysis
-├── results/                         # run-specific outputs
-├── src/
-│   ├── image_features.py
-│   ├── tappy_data.py
-│   ├── train_drawing_models.py
-│   ├── train_handwriting_models.py
-│   └── train_tappy_models.py
-├── tests/                            # Tappy, image, pen-feature and split tests
-├── PROJECT_STATUS.md
-├── README.md
-└── requirements.txt
-```
-
-This is intentionally close to the working tree. A future `src/common/` should be added only for a proven reusable responsibility, such as output metadata or a metric function with matching label and threshold semantics. Do not move all modules into a generic framework or force shared preprocessing. A common CLI/report envelope can record run ID, dataset, target, sample unit, split policy, seed, selected estimator, artifact paths and metrics while leaving metric computation and evaluation protocol dataset-specific.
-
-## Staged implementation recommendation
-
-1. Preserve current code and document dataset provenance, schema and unused raw data (done in `DATASETS.md`).
-2. Verify filename-derived groups against source metadata before treating image/pen estimates as participant-generalization results.
-3. Add synthetic-fixture tests for image vectorization, pen feature construction and group non-overlap (completed in this pass).
-4. Reproduce each existing primary experiment to isolated output directories; compare summaries and artifact schemas without overwriting saved runs (completed; selected configurations and evaluation summaries matched exactly).
-5. Standardize result metadata and test-prediction outputs, keeping existing metric definitions and selection protocols unchanged.
-6. Only then consider extracting shared evaluation/output helpers, with no result changes beyond formatting.
-7. For the early-risk goal, first locate or collect prospective data with a verified baseline/follow-up design. Do not relabel current case/control classifiers as risk models.
+Drawing participant IDs, provenance, citation and licence remain unknown. The typing cohort is small and single-study; data completeness limitations are noted in its local source ReadMe. Neither modality has external validation, and neither evaluates prospective risk. See [dataset documentation](DATASETS.md), [drawing audit](DRAWING_DATA_QUALITY.md), and [experiment results](EXPERIMENTS.md).

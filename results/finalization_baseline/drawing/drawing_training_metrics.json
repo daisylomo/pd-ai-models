@@ -1,0 +1,251 @@
+{
+  "study_scope": "Exploratory healthy-versus-known-Parkinson's image classification; not prospective early-risk prediction",
+  "seed": 42,
+  "image_size": 32,
+  "label_mapping": {
+    "healthy": 0,
+    "parkinson": 1
+  },
+  "group_key": "class-scoped filename prefix V## (provisional participant token; verify with source documentation)",
+  "input_root": "C:\\Users\\daisy\\Projects\\AI\\pd-ml-lab\\data\\Parkinson's Datasets\\Parkinson's drawings dataset\\drawings",
+  "n_images_after_exact_deduplication": 204,
+  "n_unique_candidate_groups": 28,
+  "split_summary": {
+    "train": {
+      "images": 114,
+      "participant_groups": 19,
+      "healthy_images": 54,
+      "parkinson_images": 60,
+      "healthy_groups": 9,
+      "parkinson_groups": 10
+    },
+    "validation": {
+      "images": 42,
+      "participant_groups": 5,
+      "healthy_images": 18,
+      "parkinson_images": 24,
+      "healthy_groups": 3,
+      "parkinson_groups": 2
+    },
+    "test": {
+      "images": 48,
+      "participant_groups": 4,
+      "healthy_images": 30,
+      "parkinson_images": 18,
+      "healthy_groups": 1,
+      "parkinson_groups": 3
+    }
+  },
+  "grouped_cv_folds": 3,
+  "majority_baseline_cv": {
+    "cv_train_roc_auc_mean": 0.5,
+    "cv_roc_auc_mean": 0.5,
+    "cv_roc_auc_std": 0.0,
+    "cv_roc_auc_gap": 0.0,
+    "cv_train_balanced_accuracy_mean": 0.5,
+    "cv_balanced_accuracy_mean": 0.5,
+    "validation_metrics": {
+      "n_images": 42,
+      "accuracy": 0.5714285714285714,
+      "balanced_accuracy": 0.5,
+      "roc_auc": 0.5,
+      "sensitivity": 1.0,
+      "specificity": 0.0,
+      "precision": 0.5714285714285714,
+      "f1": 0.7272727272727273,
+      "confusion_matrix_labels_healthy_parkinson": [
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "classification_report": {
+        "healthy": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 18.0
+        },
+        "parkinson": {
+          "precision": 0.5714285714285714,
+          "recall": 1.0,
+          "f1-score": 0.7272727272727273,
+          "support": 24.0
+        },
+        "accuracy": 0.5714285714285714,
+        "macro avg": {
+          "precision": 0.2857142857142857,
+          "recall": 0.5,
+          "f1-score": 0.36363636363636365,
+          "support": 42.0
+        },
+        "weighted avg": {
+          "precision": 0.32653061224489793,
+          "recall": 0.5714285714285714,
+          "f1-score": 0.41558441558441556,
+          "support": 42.0
+        }
+      }
+    }
+  },
+  "majority_baseline_test_metrics": {
+    "n_images": 48,
+    "accuracy": 0.375,
+    "balanced_accuracy": 0.5,
+    "roc_auc": 0.5,
+    "sensitivity": 1.0,
+    "specificity": 0.0,
+    "precision": 0.375,
+    "f1": 0.5454545454545454,
+    "confusion_matrix_labels_healthy_parkinson": [
+      [
+        0,
+        30
+      ],
+      [
+        0,
+        18
+      ]
+    ],
+    "classification_report": {
+      "healthy": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 30.0
+      },
+      "parkinson": {
+        "precision": 0.375,
+        "recall": 1.0,
+        "f1-score": 0.5454545454545454,
+        "support": 18.0
+      },
+      "accuracy": 0.375,
+      "macro avg": {
+        "precision": 0.1875,
+        "recall": 0.5,
+        "f1-score": 0.2727272727272727,
+        "support": 48.0
+      },
+      "weighted avg": {
+        "precision": 0.140625,
+        "recall": 0.375,
+        "f1-score": 0.2045454545454545,
+        "support": 48.0
+      }
+    }
+  },
+  "candidate_results": [
+    {
+      "model": "logistic_regression",
+      "cv_train_roc_auc_mean": 1.0,
+      "cv_roc_auc_mean": 0.6707818930041153,
+      "cv_roc_auc_std": 0.021727070043151112,
+      "cv_roc_auc_gap": 0.3292181069958847,
+      "cv_train_balanced_accuracy_mean": 1.0,
+      "cv_balanced_accuracy_mean": 0.625,
+      "validation_roc_auc": 0.7175925925925926,
+      "validation_balanced_accuracy": 0.6736111111111112,
+      "validation_sensitivity": 0.7916666666666666,
+      "validation_specificity": 0.5555555555555556,
+      "validation_precision": 0.7037037037037037,
+      "validation_f1": 0.7450980392156863,
+      "validation_false_positives": 8,
+      "validation_false_negatives": 5,
+      "validation_confusion_matrix": "[[10, 8], [5, 19]]",
+      "best_params": "{\"classifier__C\": 0.01}"
+    },
+    {
+      "model": "rbf_svm",
+      "cv_train_roc_auc_mean": 1.0,
+      "cv_roc_auc_mean": 0.6522633744855968,
+      "cv_roc_auc_std": 0.048757183584661655,
+      "cv_roc_auc_gap": 0.3477366255144032,
+      "cv_train_balanced_accuracy_mean": 0.9675925925925926,
+      "cv_balanced_accuracy_mean": 0.576388888888889,
+      "validation_roc_auc": 0.5,
+      "validation_balanced_accuracy": 0.4652777777777778,
+      "validation_sensitivity": 0.5416666666666666,
+      "validation_specificity": 0.3888888888888889,
+      "validation_precision": 0.5416666666666666,
+      "validation_f1": 0.5416666666666666,
+      "validation_false_positives": 11,
+      "validation_false_negatives": 11,
+      "validation_confusion_matrix": "[[7, 11], [11, 13]]",
+      "best_params": "{\"classifier__C\": 1.0, \"classifier__gamma\": \"scale\"}"
+    },
+    {
+      "model": "random_forest",
+      "cv_train_roc_auc_mean": 1.0,
+      "cv_roc_auc_mean": 0.6761831275720165,
+      "cv_roc_auc_std": 0.07078701442138109,
+      "cv_roc_auc_gap": 0.3238168724279835,
+      "cv_train_balanced_accuracy_mean": 1.0,
+      "cv_balanced_accuracy_mean": 0.5995370370370371,
+      "validation_roc_auc": 0.5578703703703705,
+      "validation_balanced_accuracy": 0.625,
+      "validation_sensitivity": 0.75,
+      "validation_specificity": 0.5,
+      "validation_precision": 0.6666666666666666,
+      "validation_f1": 0.7058823529411765,
+      "validation_false_positives": 9,
+      "validation_false_negatives": 6,
+      "validation_confusion_matrix": "[[9, 9], [6, 18]]",
+      "best_params": "{\"classifier__max_features\": \"sqrt\", \"classifier__min_samples_leaf\": 2}"
+    }
+  ],
+  "selected_model": "logistic_regression",
+  "test_metrics": {
+    "n_images": 48,
+    "accuracy": 0.3958333333333333,
+    "balanced_accuracy": 0.4277777777777778,
+    "roc_auc": 0.4944444444444444,
+    "sensitivity": 0.5555555555555556,
+    "specificity": 0.3,
+    "precision": 0.3225806451612903,
+    "f1": 0.40816326530612246,
+    "confusion_matrix_labels_healthy_parkinson": [
+      [
+        9,
+        21
+      ],
+      [
+        8,
+        10
+      ]
+    ],
+    "classification_report": {
+      "healthy": {
+        "precision": 0.5294117647058824,
+        "recall": 0.3,
+        "f1-score": 0.3829787234042553,
+        "support": 30.0
+      },
+      "parkinson": {
+        "precision": 0.3225806451612903,
+        "recall": 0.5555555555555556,
+        "f1-score": 0.40816326530612246,
+        "support": 18.0
+      },
+      "accuracy": 0.3958333333333333,
+      "macro avg": {
+        "precision": 0.42599620493358636,
+        "recall": 0.4277777777777778,
+        "f1-score": 0.3955709943551889,
+        "support": 48.0
+      },
+      "weighted avg": {
+        "precision": 0.45185009487666034,
+        "recall": 0.3958333333333333,
+        "f1-score": 0.3924229266174555,
+        "support": 48.0
+      }
+    }
+  },
+  "model_selection": "validation ROC-AUC, with validation balanced accuracy as a tie-breaker; test metrics are not used to select the model",
+  "motion_fusion": "not performed: no verified participant crosswalk or labeled healthy-control motion cohort is available"
+}
