@@ -7,6 +7,10 @@ The filename-derived V## token is treated as a provisional participant key and
 namespaced by class because healthy and Parkinson's IDs may be numbered
 independently. Confirm that convention against the source documentation before
 using the scores as evidence of generalization.
+
+The module builds one image-level row per drawing, keeps filename-derived
+candidate groups together during splitting, tunes classifiers using grouped
+cross-validation, and writes a fitted pipeline plus reproducibility summaries.
 """
 
 from __future__ import annotations
@@ -44,17 +48,20 @@ from sklearn.svm import SVC
 from src.image_features import GrayscaleVectorizer
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Resolve input/output defaults relative to this repository, not the shell cwd.
 DEFAULT_IMAGE_ROOT = (
     PROJECT_ROOT
     / "data"
     / "Parkinson's drawings dataset"
 )
-LABEL_TO_TARGET = {"healthy": 0, "parkinson": 1}
-SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}
-RANDOM_SEED = 42
+LABEL_TO_TARGET = {"healthy": 0, "parkinson": 1}  # Binary target encoding used in metrics and estimators.
+SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}  # Files the loader can decode.
+RANDOM_SEED = 42  # Fixed default for repeatable partitions and estimators.
 
 
+# File manifest and duplicate checks
 def sha256_file(path: Path) -> str:
+    """Return a streaming SHA-256 digest used to detect exact image duplicates."""
     digest = hashlib.sha256()
     with path.open("rb") as source:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
@@ -63,8 +70,14 @@ def sha256_file(path: Path) -> str:
 
 
 def build_manifest(image_root: Path) -> pd.DataFrame:
-    """Read labels/tasks from directories and grouping keys from filenames."""
+    """Build and validate the labeled image table used by the experiment.
+
+    Folder names provide task and class labels; the leading V-number in each
+    filename provides a provisional, class-scoped group key. Exact duplicate
+    bytes are removed only when their group and label agree.
+    """
     records = []
+    # The class is read from the directory rather than inferred from a filename.
     for task in ("spiral", "wave"):
         for split in ("training", "testing"):
             for label in LABEL_TO_TARGET:
@@ -109,7 +122,9 @@ def build_manifest(image_root: Path) -> pd.DataFrame:
     return manifest
 
 
+# Group-aware partition construction
 def _has_both_classes(y: np.ndarray) -> bool:
+    """Return whether a partition contains both encoded diagnosis classes."""
     return set(np.unique(y)) == {0, 1}
 
 
@@ -119,7 +134,7 @@ def _choose_group_fold(
     n_splits: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return the first deterministic stratified fold with both classes."""
+    """Find one reproducible group-aware fold with both labels on each side."""
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     features = np.zeros((len(y), 1), dtype=np.uint8)
     for train_indices, holdout_indices in splitter.split(features, y, groups):
@@ -133,7 +148,11 @@ def make_grouped_splits(
     groups: np.ndarray,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Create approximately 60/20/20 train/validation/test participant splits."""
+    """Create group-disjoint train, validation, and test image indices.
+
+    Nested stratified group folds approximate a 60/20/20 image split while
+    preventing a candidate filename group from crossing partition boundaries.
+    """
     groups_per_class = pd.DataFrame({"target": y, "group": groups}).drop_duplicates()
     minimum_groups = int(groups_per_class.groupby("target")["group"].nunique().min())
     if minimum_groups < 5:
@@ -157,7 +176,10 @@ def make_grouped_splits(
     return train, validation, test
 
 
+# Feature pipeline and evaluation
 def make_preprocessor(image_size: int) -> ColumnTransformer:
+    """Build the pixel/task feature pipeline used by every candidate model."""
+    # Pixel scaling is fitted within each training fold; task labels are encoded separately.
     image_pipeline = Pipeline(
         [
             ("vectorize", GrayscaleVectorizer(size=image_size)),
@@ -175,12 +197,14 @@ def make_preprocessor(image_size: int) -> ColumnTransformer:
 
 
 def decision_scores(model: Pipeline, X: pd.DataFrame) -> np.ndarray:
+    """Return continuous positive-class scores for ranking metrics such as AUC."""
     if hasattr(model, "decision_function"):
         return model.decision_function(X)
     return model.predict_proba(X)[:, 1]
 
 
 def evaluate(model: Pipeline, X: pd.DataFrame, y: np.ndarray) -> dict[str, Any]:
+    """Compute thresholded and ranking metrics with stable class ordering."""
     predictions = model.predict(X)
     scores = decision_scores(model, X)
     matrix = confusion_matrix(y, predictions, labels=[0, 1])
@@ -207,6 +231,7 @@ def evaluate(model: Pipeline, X: pd.DataFrame, y: np.ndarray) -> dict[str, Any]:
     }
 
 
+# Complete experiment orchestration and artifact output
 def run_experiment(
     image_root: Path,
     model_path: Path,
@@ -214,6 +239,12 @@ def run_experiment(
     seed: int = RANDOM_SEED,
     image_size: int = 32,
 ) -> dict[str, Any]:
+    """Run grouped model selection, held-out evaluation, and artifact writing.
+
+    The validation partition selects among tuned candidates. The test partition
+    is evaluated only after selection and remains outside all fitting decisions.
+    """
+    # Read paths, labels, and provisional groups, then create independent partitions.
     manifest = build_manifest(image_root)
     X = manifest[["path", "task"]]
     y = manifest["target"].to_numpy(dtype=np.int64)
@@ -224,6 +255,7 @@ def run_experiment(
     X_validation, y_validation = X.iloc[validation_indices], y[validation_indices]
     X_test, y_test = X.iloc[test_indices], y[test_indices]
 
+    # Use at most three CV folds, limited by the smallest class's group count.
     cv_group_counts = pd.DataFrame({"target": y_train, "group": groups_train}).drop_duplicates().groupby("target")["group"].nunique()
     cv_folds = min(3, int(cv_group_counts.min()))
     if cv_folds < 2:
@@ -237,6 +269,7 @@ def run_experiment(
         if set(groups_train[train_fold]) & set(groups_train[validation_fold]):
             raise AssertionError("Participant-group leakage inside cross-validation")
 
+    # A prior-only model provides a reference score without learning image patterns.
     baseline_pipeline = Pipeline(
         [("features", make_preprocessor(image_size)), ("classifier", DummyClassifier(strategy="prior"))]
     )
@@ -261,6 +294,7 @@ def run_experiment(
     baseline_validation = clone(baseline_pipeline).fit(X_train, y_train)
     baseline["validation_metrics"] = evaluate(baseline_validation, X_validation, y_validation)
 
+    # Each parameter grid is searched only on training groups; validation is separate.
     candidate_specs = {
         "logistic_regression": (
             LogisticRegression(class_weight="balanced", max_iter=2000, random_state=seed),
@@ -333,6 +367,7 @@ def run_experiment(
             }
         )
 
+    # Select on validation performance, using CV AUC only as the final tie-breaker.
     candidate_table = pd.DataFrame(candidate_results).sort_values(
         ["validation_roc_auc", "validation_balanced_accuracy", "cv_roc_auc_mean"],
         ascending=False,
@@ -340,6 +375,7 @@ def run_experiment(
     selected_name = str(candidate_table.iloc[0]["model"])
     selected_search = fitted_searches[selected_name]
 
+    # Refit the winning configuration using both training and validation examples.
     fit_indices = np.concatenate([train_indices, validation_indices])
     final_model = clone(selected_search.best_estimator_)
     final_model.fit(X.iloc[fit_indices], y[fit_indices])
@@ -379,6 +415,7 @@ def run_experiment(
         "motion_fusion": "not performed: no verified participant crosswalk or labeled healthy-control motion cohort is available",
     }
 
+    # Create output folders only after evaluation is complete, then save artifacts.
     model_path.parent.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(
@@ -407,7 +444,9 @@ def run_experiment(
     return summary
 
 
+# Command-line entry point
 def parse_args() -> argparse.Namespace:
+    """Define CLI arguments for dataset, artifact paths, and reproducibility."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image-root", type=Path, default=DEFAULT_IMAGE_ROOT)
     parser.add_argument("--model-path", type=Path, default=PROJECT_ROOT / "models" / "drawing_image_model.joblib")
@@ -418,6 +457,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Parse command-line options and run the drawing baseline experiment."""
     arguments = parse_args()
     run_experiment(
         image_root=arguments.image_root,

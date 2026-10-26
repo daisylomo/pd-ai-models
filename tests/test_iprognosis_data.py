@@ -1,3 +1,5 @@
+"""Regression tests for typing event parsing, linkage, and model evaluation."""
+
 from __future__ import annotations
 
 import tempfile
@@ -14,16 +16,21 @@ from sklearn.pipeline import Pipeline
 
 
 class IPrognosisParsingTests(unittest.TestCase):
+    """Check event validation, feature extraction, and participant linkage."""
+
     def test_parses_documented_fields_and_millisecond_timestamps(self):
+        """Keep parsed timestamps in milliseconds and pressure numeric."""
         self.assertEqual(parse_event_line("Press,1000,Release 1120,0.625"), (1000, 1120, 0.625))
 
     def test_rejects_malformed_and_reversed_events(self):
+        """Reject rows with missing fields or a release before its press."""
         with self.assertRaises(ValueError):
             parse_event_line("Press,1000,1120,0.5")
         with self.assertRaises(ValueError):
             parse_event_line("Press,1200,Release 1100,0.5")
 
     def test_extracts_hold_interkey_pause_and_pressure_features(self):
+        """Summarize event timing and normalized pressure for a sample excerpt."""
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "S01_TEX01.txt"
             path.write_text(
@@ -40,6 +47,7 @@ class IPrognosisParsingTests(unittest.TestCase):
         self.assertAlmostEqual(features["pressure_normalized_median"], 0.5)
 
     def test_links_labels_by_subject_id_and_aggregates_to_one_row_per_participant(self):
+        """Join clinical labels by subject ID and median-aggregate excerpts."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "Data" / "S01").mkdir(parents=True)
@@ -68,7 +76,10 @@ class IPrognosisParsingTests(unittest.TestCase):
 
 
 class ParticipantSplitTests(unittest.TestCase):
+    """Check participant-level splitting and the shape of metric reports."""
+
     def test_holdout_is_reproducible_stratified_and_participant_disjoint(self):
+        """Use the same seed consistently and never split a person across sets."""
         ids = np.asarray([f"S{i:02d}" for i in range(1, 21)])
         labels = np.asarray([0] * 9 + [1] * 11)
         train, test = make_participant_split(labels, ids, seed=42)
@@ -79,6 +90,7 @@ class ParticipantSplitTests(unittest.TestCase):
         self.assertEqual(set(labels[test]), {0, 1})
 
     def test_metric_output_includes_balanced_accuracy_and_class_support(self):
+        """Include balanced accuracy and both class counts in evaluation output."""
         features = pd.DataFrame({"x": [0.0, 1.0, 2.0, 3.0]})
         labels = np.asarray([0, 0, 1, 1])
         model = Pipeline([("classifier", DummyClassifier(strategy="constant", constant=1))]).fit(features, labels)
@@ -89,4 +101,5 @@ class ParticipantSplitTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # Allow this test module to be run directly as well as through unittest discovery.
     unittest.main()

@@ -1,3 +1,5 @@
+"""Regression tests for image vectorization and drawing group splits."""
+
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,7 +12,10 @@ from src.train_drawing_models import make_grouped_splits
 
 
 class ImageFeatureTests(unittest.TestCase):
+    """Check output shape, numeric type, and range of grayscale vectors."""
+
     def test_vectorizer_returns_normalized_fixed_size_grayscale(self):
+        """Ensure each image becomes a fixed-length vector scaled to [0, 1]."""
         with tempfile.TemporaryDirectory() as directory:
             image_path = Path(directory) / "sample.png"
             Image.new("RGB", (12, 10), color=(255, 0, 0)).save(image_path)
@@ -22,8 +27,11 @@ class ImageFeatureTests(unittest.TestCase):
 
 
 class GroupedSplitTests(unittest.TestCase):
+    """Check that drawing partitions retain both classes and isolate groups."""
+
     @staticmethod
     def _examples():
+        """Create balanced toy rows with repeated observations per group."""
         labels, groups = [], []
         for label, prefix in ((0, "healthy"), (1, "parkinson")):
             for group_index in range(10):
@@ -33,6 +41,7 @@ class GroupedSplitTests(unittest.TestCase):
         return np.asarray(labels), np.asarray(groups)
 
     def test_drawing_partitions_keep_groups_disjoint(self):
+        """Ensure train, validation, and test contain disjoint candidate groups."""
         labels, groups = self._examples()
         partitions = make_grouped_splits(labels, groups, seed=42)
         group_sets = [set(groups[indices]) for indices in partitions]
@@ -43,4 +52,5 @@ class GroupedSplitTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # Allow this test module to be run directly as well as through unittest discovery.
     unittest.main()

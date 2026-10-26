@@ -23,8 +23,13 @@ LABELS = {"Control": 0, "PD": 1}
 EVENT_FILE_RE = re.compile(r"^S(\d{2})_TEX(\d{1,3})\.txt$", re.IGNORECASE)
 
 
+# Event parsing and validation
 def parse_event_line(line: str) -> tuple[int, int, float]:
-    """Parse the documented four-field event row; timestamps are milliseconds."""
+    """Parse one documented event into press ms, release ms, and pressure.
+
+    Malformed rows, non-finite pressures, negative timestamps, and releases
+    before presses are rejected so bad records cannot become model features.
+    """
     fields = [field.strip() for field in line.strip().split(",")]
     if len(fields) != 4:
         raise ValueError("expected four comma-separated fields")
@@ -46,9 +51,11 @@ def parse_event_line(line: str) -> tuple[int, int, float]:
 
 
 def _summaries(values: list[float], prefix: str) -> dict[str, float]:
+    """Summarize one measurement series with scale and spread statistics."""
     if not values:
         return {}
     array = np.asarray(values, dtype=float)
+    # Quantiles make the summaries less sensitive to unusually long timings.
     mean = float(array.mean())
     q25, median, q75, q90 = (float(v) for v in np.quantile(array, [0.25, 0.5, 0.75, 0.9]))
     std = float(array.std(ddof=0))
@@ -62,12 +69,18 @@ def _summaries(values: list[float], prefix: str) -> dict[str, float]:
     }
 
 
+# Excerpt-level feature extraction
 def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> tuple[dict[str, float], dict[str, Any]]:
-    """Extract timing and in-range normalized-pressure summaries for one excerpt."""
+    """Extract per-excerpt timing/pressure predictors and a parsing audit.
+
+    Out-of-range pressure values are counted but excluded from pressure
+    summaries; malformed and temporally invalid event rows are excluded.
+    """
     events: list[tuple[int, int, float]] = []
     malformed_lines = 0
     invalid_events = 0
     out_of_range_pressure = 0
+    # Read with BOM handling and replacement decoding so one odd byte does not stop the audit.
     with path.open("r", encoding="utf-8-sig", errors="replace") as source:
         for line in source:
             if not line.strip():
@@ -84,6 +97,7 @@ def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> t
                 out_of_range_pressure += 1
             events.append(event)
 
+    # Convert valid events into hold lengths, between-press intervals, and gaps.
     holds: list[float] = []
     press_intervals: list[float] = []
     interkey_gaps: list[float] = []
@@ -97,6 +111,7 @@ def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> t
         # values in the audit, but only summarize values within that range.
         if 0.0 <= pressure <= 1.0:
             pressures.append(pressure)
+    # Compare adjacent events to measure timing; invalid ordering is audited rather than used.
     for previous, current in zip(events, events[1:]):
         press_interval = current[0] - previous[0]
         gap = current[0] - previous[1]
@@ -111,6 +126,7 @@ def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> t
             if gap >= pause_threshold_ms:
                 pauses.append(float(gap))
 
+    # Store summary statistics for each feature family plus the pause rate.
     features: dict[str, float] = {}
     features.update(_summaries(holds, "hold_ms"))
     features.update(_summaries(press_intervals, "press_interval_ms"))
@@ -119,6 +135,7 @@ def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> t
     features.update(_summaries(pressures, "pressure_normalized"))
     n_valid_gaps = len(interkey_gaps)
     features["pause_fraction"] = len(pauses) / n_valid_gaps if n_valid_gaps else 0.0
+    # Keep counts of excluded or unusual records separate from predictor values.
     audit = {
         "nonblank_lines": len(events) + malformed_lines + invalid_events,
         "valid_events": len(events),
@@ -132,12 +149,18 @@ def extract_excerpt_features(path: Path, *, pause_threshold_ms: int = 1000) -> t
     return features, audit
 
 
+# Participant linkage and aggregation
 def build_participant_dataset(
     iprognosis_root: Path = DEFAULT_IPROGNOSIS_ROOT,
     *,
     pause_threshold_ms: int = 1000,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
-    """Return participant-level features, excerpt features and a data audit."""
+    """Build participant predictors, excerpt audit rows, and dataset metadata.
+
+    Clinical group labels are joined by participant ID parsed from the source
+    folder/file names. Excerpt predictors are median-aggregated per participant;
+    counts are retained for auditing and excluded later from model predictors.
+    """
     root = Path(iprognosis_root)
     data_root = root / "Data"
     label_path = root / "Demographics_Clinical_Characteristics.csv"
@@ -146,6 +169,7 @@ def build_participant_dataset(
     if not label_path.is_file():
         raise FileNotFoundError(f"Clinical label CSV not found: {label_path}")
 
+    # Preserve subject IDs as strings to avoid losing leading zeroes.
     labels = pd.read_csv(label_path, dtype={"Subject ID": str})
     required = {"Subject ID", "Group"}
     if not required.issubset(labels.columns):
@@ -168,6 +192,7 @@ def build_participant_dataset(
     malformed_files: list[str] = []
     empty_files: list[str] = []
 
+    # Validate the two independent ID sources before assigning each excerpt a label.
     for path in paths:
         match = EVENT_FILE_RE.fullmatch(path.name)
         if match is None:
@@ -198,6 +223,7 @@ def build_participant_dataset(
     missing_label_subjects = sorted(set(label_map) - seen_subjects)
     if missing_label_subjects:
         raise ValueError(f"Clinical subjects have no excerpt files: {missing_label_subjects}")
+    # Keep excerpts for auditing, then collapse them to one row per participant.
     excerpts = pd.DataFrame(excerpt_rows).sort_values(["participant_id", "excerpt_id"]).reset_index(drop=True)
     feature_columns = [
         column for column in excerpts.columns

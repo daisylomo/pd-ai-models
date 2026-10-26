@@ -1,4 +1,9 @@
-"""Participant-level baseline for i-PROGNOSIS smartphone typing data."""
+"""Participant-level baseline for i-PROGNOSIS smartphone typing data.
+
+The command loads and aggregates event files, reserves participants for a final
+test, tunes two classifiers with grouped cross-validation, and saves a fitted
+pipeline with the split assignments and evaluation records.
+"""
 
 from __future__ import annotations
 
@@ -30,10 +35,11 @@ from sklearn.preprocessing import StandardScaler
 from src.iprognosis_data import DEFAULT_IPROGNOSIS_ROOT, build_participant_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-RANDOM_SEED = 42
-TEST_FRACTION = 0.20
+RANDOM_SEED = 42  # Fixed default so the participant split and estimators are repeatable.
+TEST_FRACTION = 0.20  # Reserve one fifth of participants for a single final evaluation.
 
 
+# Participant split and estimator pipeline helpers
 def make_participant_split(
     labels: np.ndarray,
     participant_ids: np.ndarray,
@@ -41,7 +47,11 @@ def make_participant_split(
     seed: int = RANDOM_SEED,
     test_fraction: float = TEST_FRACTION,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Create a stratified participant holdout and assert IDs do not overlap."""
+    """Create reproducible class-stratified train/test participant indices.
+
+    Each participant contributes one row, so a stratified row split is also a
+    participant split. Assertions guard against overlap or a missing class.
+    """
     indices = np.arange(len(labels))
     train_indices, test_indices = train_test_split(
         indices, test_size=test_fraction, random_state=seed, stratify=labels
@@ -54,6 +64,7 @@ def make_participant_split(
 
 
 def _pipeline(classifier: Any, *, scale: bool) -> Pipeline:
+    """Wrap an estimator with fold-local median imputation and optional scaling."""
     steps: list[tuple[str, Any]] = [("imputer", SimpleImputer(strategy="median", add_indicator=True))]
     if scale:
         steps.append(("scaler", StandardScaler()))
@@ -62,10 +73,12 @@ def _pipeline(classifier: Any, *, scale: bool) -> Pipeline:
 
 
 def _positive_scores(model: Pipeline, features: pd.DataFrame) -> np.ndarray:
+    """Extract the model's estimated probability for the positive class, PD."""
     return np.asarray(model.predict_proba(features)[:, 1], dtype=float)
 
 
 def evaluate(model: Pipeline, features: pd.DataFrame, labels: np.ndarray) -> dict[str, Any]:
+    """Calculate classification metrics and class support for one data split."""
     predictions = model.predict(features).astype(int)
     scores = _positive_scores(model, features)
     matrix = confusion_matrix(labels, predictions, labels=[0, 1])
@@ -86,6 +99,7 @@ def evaluate(model: Pipeline, features: pd.DataFrame, labels: np.ndarray) -> dic
     }
 
 
+# Complete experiment orchestration and artifact output
 def run_experiment(
     iprognosis_root: Path = DEFAULT_IPROGNOSIS_ROOT,
     model_path: Path = PROJECT_ROOT / "models" / "typing_iprognosis_model.joblib",
@@ -93,7 +107,14 @@ def run_experiment(
     *,
     seed: int = RANDOM_SEED,
 ) -> dict[str, Any]:
+    """Train/select a typing classifier and save its metrics and fitted pipeline.
+
+    The held-out participants never enter cross-validation or model selection;
+    all learned imputation and scaling remain inside each sklearn pipeline fit.
+    """
+    # Convert raw events to one predictor row per participant before splitting.
     participants, excerpt_features, data_audit = build_participant_dataset(iprognosis_root)
+    # IDs, labels, and audit counts must not become model inputs.
     excluded = {"participant_id", "target", "excerpt_count", "total_valid_events"}
     feature_columns = [column for column in participants.columns if column not in excluded]
     X = participants[feature_columns]
@@ -104,10 +125,12 @@ def run_experiment(
     X_test, y_test = X.iloc[test_indices], y[test_indices]
     ids_train, ids_test = participant_ids[train_indices], participant_ids[test_indices]
 
+    # Limit fold count to the smallest training class so each fold can be stratified.
     minimum_class_count = int(pd.Series(y_train).value_counts().min())
     cv_folds = min(5, minimum_class_count)
     if cv_folds < 2:
         raise ValueError("Insufficient training participants per class for grouped CV")
+    # Group on participant IDs even though each participant currently has one row.
     cv = StratifiedGroupKFold(n_splits=cv_folds, shuffle=True, random_state=seed + 1)
     cv_splits = list(cv.split(X_train, y_train, groups=ids_train))
     cv_assignments: dict[str, int] = {}
@@ -125,6 +148,7 @@ def run_experiment(
             "validation_participant_ids": sorted(str(x) for x in fold_validation_ids),
         })
 
+    # Compare linear and nonlinear classifiers using identical participant folds.
     candidates = {
         "logistic_regression": (
             _pipeline(
@@ -144,6 +168,7 @@ def run_experiment(
     }
     searches: dict[str, GridSearchCV] = {}
     cv_rows: list[dict[str, Any]] = []
+    # Run each estimator/grid over the same precomputed participant folds.
     for name, (estimator, parameter_grid) in candidates.items():
         search = GridSearchCV(
             estimator,
@@ -169,16 +194,19 @@ def run_experiment(
                 "selected_for_model": bool(index == search.best_index_),
             })
 
+    # Select the estimator with the highest mean grouped-CV ROC-AUC.
     candidate_best = {
         name: float(search.best_score_) for name, search in searches.items()
     }
     selected_name = max(candidate_best, key=candidate_best.get)
     selected_search = searches[selected_name]
     final_model = selected_search.best_estimator_
+    # Score the held-out participants only after CV has selected the model.
     test_metrics = evaluate(final_model, X_test, y_test)
     test_predictions = final_model.predict(X_test).astype(int)
     test_scores = _positive_scores(final_model, X_test)
 
+    # Save every participant's holdout and CV-validation assignment for auditability.
     assignments = []
     for index, participant_id in enumerate(participant_ids):
         partition = "test" if index in set(test_indices) else "train"
@@ -196,6 +224,7 @@ def run_experiment(
         "pd_score_uncalibrated": test_scores,
     }).sort_values("participant_id")
 
+    # Keep derived features, assignments, predictions, metadata, and model together.
     results_dir.mkdir(parents=True, exist_ok=True)
     model_path.parent.mkdir(parents=True, exist_ok=True)
     participants.to_csv(results_dir / "typing_participant_features.csv", index=False)
@@ -204,6 +233,7 @@ def run_experiment(
     pd.DataFrame(cv_rows).to_csv(results_dir / "typing_cv_results.csv", index=False)
     test_output.to_csv(results_dir / "typing_test_predictions.csv", index=False)
 
+    # Record choices and IDs so the experiment can be audited after completion.
     config = {
         "study_scope": "Retrospective classification of known PD versus control status from smartphone touchscreen typing; not prospective risk prediction",
         "seed": int(seed),
@@ -287,7 +317,9 @@ def run_experiment(
     return metrics
 
 
+# Command-line entry point
 def parse_args() -> argparse.Namespace:
+    """Define CLI options for dataset location, output paths, and random seed."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--iprognosis-root", type=Path, default=DEFAULT_IPROGNOSIS_ROOT)
     parser.add_argument("--model-path", type=Path, default=PROJECT_ROOT / "models" / "typing_iprognosis_model.joblib")
@@ -297,6 +329,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Parse command-line options and run the participant-level experiment."""
     args = parse_args()
     run_experiment(args.iprognosis_root, args.model_path, args.results_dir, seed=args.seed)
 
