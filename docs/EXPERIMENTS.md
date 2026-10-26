@@ -2,9 +2,13 @@
 
 All runs are retrospective classification of existing labels. No experiment predicts future diagnosis or establishes clinical validity. Local datasets, labels and populations are not harmonized; results are not a cross-modality leaderboard.
 
-## Drawing comparison
+## Drawing pixel baseline
 
 The preserved pixel baseline was rerun to `results/finalization_baseline/drawing/` and matched the canonical root metrics. It selects logistic regression on a separate grouped validation partition, then evaluates one 48-image test set. Its candidate groups are filename-derived and unverified.
+
+## Archived drawing comparison (inactive)
+
+This section records a completed experiment for historical reference. Its trainer and notebook were removed, so it is no longer reproducible through the active workflow.
 
 The controlled comparison uses seed 42, the same candidate-group train/validation/test assignments for every representation/task, and three-fold `StratifiedGroupKFold` on train+validation groups. Candidate choice uses CV ROC-AUC, with balanced accuracy as tie-breaker. No test score is used to choose a model or representation. Because multiple feature/model candidates are compared on these same CV folds, the winning CV mean is selection-optimistic. The grouped test has four candidate groups total (one healthy, three Parkinson's). Since identity is unverified, this is not confirmed unseen-participant evaluation.
 
@@ -49,7 +53,7 @@ The held-out result is reproduced but very unstable at seven participants. It do
 ## Reproducibility and artifact paths
 
 - Drawing pixel baseline: `models/finalization_baseline/drawing_image_model.joblib`; `results/finalization_baseline/drawing/drawing_training_metrics.json` and `drawing_candidate_results.csv`.
-- Drawing comparison: selected per-task bundles under `models/drawing_representation_comparison/`; metrics, CV comparison, fold/split assignments, test predictions and report under `results/drawing_representation_comparison/`.
+- Archived drawing comparison outputs: CV tables, split assignments, test predictions and report remain under `results/drawing_representation_comparison/`; there is no active trainer.
 - Typing rerun: `models/finalization_baseline/typing_iprognosis_model.joblib`; participant features, excerpt audit, split assignments, grouped-CV table, test predictions, config, metrics and report under `results/finalization_baseline/typing/`.
 
 Seeds and participant/candidate-group split identities are recorded in the JSON/CSV outputs. The typing features and participant IDs are local derived data and should not be redistributed casually. Existing pre-finalization result and model files were preserved.

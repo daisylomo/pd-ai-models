@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Train drawing pixel baseline",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.train_drawing_models",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "args": [
+        "--model-path",
+        "models/finalization_baseline/drawing_image_model.joblib",
+        "--results-dir",
+        "results/finalization_baseline/drawing",
+        "--seed",
+        "42",
+        "--image-size",
+        "32"
+      ]
+    },
+    {
+      "name": "Train i-PROGNOSIS typing model",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "src.train_typing_models",
+      "cwd": "${workspaceFolder}",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "console": "integratedTerminal",
+      "args": [
+        "--model-path",
+        "models/finalization_baseline/typing_iprognosis_model.joblib",
+        "--results-dir",
+        "results/finalization_baseline/typing",
+        "--seed",
+        "42"
+      ]
+    }
+  ]
+}

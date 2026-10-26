@@ -47,9 +47,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_IMAGE_ROOT = (
     PROJECT_ROOT
     / "data"
-    / "Parkinson's Datasets"
     / "Parkinson's drawings dataset"
-    / "drawings"
 )
 LABEL_TO_TARGET = {"healthy": 0, "parkinson": 1}
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff"}

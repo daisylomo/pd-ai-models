@@ -1,5 +1,0 @@
-model,cv_train_roc_auc_mean,cv_roc_auc_mean,cv_roc_auc_std,cv_train_average_precision_mean,cv_average_precision_mean,cv_balanced_accuracy_mean,best_params
-logistic_regression,0.9757890122735242,0.4980952380952381,0.07658469442062907,0.9919118837035455,0.7828510832501323,0.4809523809523809,"{""classifier__C"": 10.0}"
-rbf_svm,0.9963793103448275,0.44400000000000006,0.16202169446854348,0.9990563736699289,0.7593842203793553,0.4685714285714286,"{""classifier__C"": 10.0, ""classifier__gamma"": ""scale""}"
-gradient_boosting,0.9966379310344827,0.4161904761904761,0.11552031557547615,0.9987080736416676,0.7322161927830879,0.4966666666666667,"{""classifier__learning_rate"": 0.1, ""classifier__max_depth"": 1, ""classifier__min_samples_leaf"": 3, ""classifier__n_estimators"": 100}"
-random_forest,1.0,0.3487619047619047,0.050533301024885124,1.0000000000000002,0.6998882766250081,0.47857142857142854,"{""classifier__max_features"": 0.5, ""classifier__min_samples_leaf"": 2, ""classifier__n_estimators"": 200}"

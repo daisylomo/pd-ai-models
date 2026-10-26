@@ -7,7 +7,7 @@
     "parkinson": 1
   },
   "group_key": "class-scoped filename prefix V## (provisional participant token; verify with source documentation)",
-  "input_root": "C:\\Users\\daisy\\Projects\\AI\\pd-ml-lab\\data\\Parkinson's Datasets\\Parkinson's drawings dataset\\drawings",
+  "input_root": "C:\\Users\\daisy\\Projects\\AI\\pd-ml-lab\\data\\Parkinson's drawings dataset",
   "n_images_after_exact_deduplication": 204,
   "n_unique_candidate_groups": 28,
   "split_summary": {

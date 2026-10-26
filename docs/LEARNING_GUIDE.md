@@ -2,14 +2,13 @@
 
 ## Samples, labels and units
 
-In the drawing experiment one image is an input row, but images may be related by person. The `V##` name token is only a candidate group; local documentation does not verify identity. Group separation reduces an obvious repeated-image leak but cannot prove independent-participant evaluation.
+In the drawing experiment one image is an input row, but images may be related by person. The `V##` name token is only a candidate group. Group separation reduces an obvious repeated-image leak but cannot prove independent-participant evaluation.
 
 In the virtual typing experiment, each raw line represents a key press/release event. The loader summarizes each excerpt and then median-aggregates excerpts to one participant row before splitting. This prevents excerpts from the same participant crossing into train and test. The target is the clinical CSV `Group` status, `Control` or `PD`.
 
 ## Features
 
-The preserved drawing baseline resizes an image to 32×32 grayscale pixels. That is a simple pixel representation but squares non-square wave drawings. The comparison adds aspect-preserving letterboxing and static descriptors: thresholded foreground amount/location, centroid/covariance, radial foreground distribution and local gradient orientations. Descriptors can respond to scan texture, framing or thresholding, and do not encode true movement speed, pauses or temporal smoothness.
-
+The drawing baseline resizes an image to 32×32 grayscale pixels. That is a simple pixel representation but squares non-square wave drawings. It uses static image appearance and does not encode true movement speed, pauses or temporal smoothness.
 Typing features summarize hold durations, between-press intervals, inter-key gaps, long pauses and documented normalized pressure. The features represent performance in the recorded task, not disease-specific biomarkers.
 
 ## Keeping related observations together
@@ -18,8 +17,7 @@ Cross-validation and the held-out test should separate the independent unit, not
 
 ## Preprocessing and model selection
 
-Image transforms in the representation comparison are fixed per-image operations, so they use no statistics from other images. Standard scaling and classifier fitting are part of the sklearn pipeline and are learned within each grouped CV training fold. CV ROC-AUC selects the drawing representation/model; test results are generated after selection.
-
+The drawing baseline uses a grouped train/validation/test partition and keeps image vectorization and classifier fitting in its sklearn pipeline. The separate representation-comparison experiment has been removed from the active workflow; its saved reports are historical records only.
 Typing uses median imputation with missingness indicators and scaling for linear models, inside a pipeline searched with participant-grouped CV. The held-out test participants do not influence imputation or scaling. Model selection uses training-fold ROC-AUC; the seven-person test set is evaluated once in the isolated rerun.
 
 ## Reading metrics

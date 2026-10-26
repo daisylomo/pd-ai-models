@@ -260,6 +260,7 @@
       "pd": 4
     },
     "accuracy": 0.8571428571428571,
+    "balanced_accuracy": 0.875,
     "precision_pd": 1.0,
     "recall_pd": 0.75,
     "f1_pd": 0.8571428571428571,

@@ -17,7 +17,7 @@ import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_IPROGNOSIS_ROOT = (
-    PROJECT_ROOT / "data" / "Parkinson's Datasets" / "virtual keyboard data" / "iprognosis_typing_dev"
+    PROJECT_ROOT / "data" / "virtual keyboard data" / "iprognosis_typing_dev"
 )
 LABELS = {"Control": 0, "PD": 1}
 EVENT_FILE_RE = re.compile(r"^S(\d{2})_TEX(\d{1,3})\.txt$", re.IGNORECASE)

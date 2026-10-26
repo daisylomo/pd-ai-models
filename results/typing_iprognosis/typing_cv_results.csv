@@ -1,6 +1,6 @@
-model,parameters,mean_validation_roc_auc,std_validation_roc_auc,mean_validation_accuracy,mean_validation_f1_pd,selected_for_model
-logistic_regression,"{""classifier__C"": 0.1}",0.6888888888888889,0.2154524381073924,0.7666666666666667,0.76,True
-logistic_regression,"{""classifier__C"": 1.0}",0.6222222222222222,0.2797706291558705,0.6533333333333333,0.6466666666666666,False
-logistic_regression,"{""classifier__C"": 10.0}",0.4666666666666666,0.2449489742783178,0.42000000000000004,0.4076190476190476,False
-random_forest,"{""classifier__max_features"": ""sqrt"", ""classifier__min_samples_leaf"": 2}",0.7333333333333334,0.1699673171197595,0.7266666666666667,0.7266666666666667,True
-random_forest,"{""classifier__max_features"": ""sqrt"", ""classifier__min_samples_leaf"": 4}",0.7222222222222222,0.19563129846287786,0.7266666666666667,0.7266666666666667,False
+model,parameters,mean_validation_roc_auc,std_validation_roc_auc,mean_validation_accuracy,mean_validation_balanced_accuracy,mean_validation_f1_pd,selected_for_model
+logistic_regression,"{""classifier__C"": 0.1}",0.6888888888888889,0.2154524381073924,0.7666666666666667,0.75,0.76,True
+logistic_regression,"{""classifier__C"": 1.0}",0.6222222222222222,0.2797706291558705,0.6533333333333333,0.6499999999999999,0.6466666666666666,False
+logistic_regression,"{""classifier__C"": 10.0}",0.4666666666666666,0.2449489742783178,0.42000000000000004,0.4333333333333333,0.4076190476190476,False
+random_forest,"{""classifier__max_features"": ""sqrt"", ""classifier__min_samples_leaf"": 2}",0.7333333333333334,0.1699673171197595,0.7266666666666667,0.7166666666666666,0.7266666666666667,True
+random_forest,"{""classifier__max_features"": ""sqrt"", ""classifier__min_samples_leaf"": 4}",0.7222222222222222,0.19563129846287786,0.7266666666666667,0.7166666666666666,0.7266666666666667,False
